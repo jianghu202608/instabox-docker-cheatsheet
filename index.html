@@ -226,7 +226,7 @@
   .progress li.todo .txt strong{color:var(--ink-2)}
   .progress .txt code{font-size:12.5px}
   .progress-bar{height:8px;border-radius:99px;background:var(--chip-bg);overflow:hidden;margin:14px 16px 4px}
-  .progress-bar i{display:block;height:100%;width:71.4%;background:var(--accent);border-radius:99px}
+  .progress-bar i{display:block;height:100%;width:100%;background:var(--accent);border-radius:99px}
   .progress-meta{padding:0 16px 14px;font-size:12.5px;color:var(--ink-3)}
 
   footer{margin-top:44px;border-top:1px solid var(--line);padding-top:18px;color:var(--ink-3);font-size:13px;line-height:1.7}
@@ -269,7 +269,9 @@
       <a href="#s5">⑤ 机器注意点</a>
       <a href="#s6">⑥ Dockerfile</a>
       <a href="#s7">⑦ 私有仓库</a>
-      <a href="#s8">⑧ 学习进度</a>
+      <a href="#s8">⑧ 数据卷</a>
+      <a href="#s9">⑨ 自动重启</a>
+      <a href="#s10">⑩ 学习进度</a>
     </nav>
   </div>
 
@@ -491,19 +493,70 @@ docker pull localhost:5000/mynginx:v1</code></pre>
 
   <!-- 八 -->
   <section id="s8" data-search-section>
-    <div class="sec-head"><span class="sec-no">08</span><h2>学习进度</h2></div>
-    <p class="sec-desc">截至 2026-10-29：四节正课 + 仓库课已实操通过。</p>
+    <div class="sec-head"><span class="sec-no">08</span><h2>数据卷 volumes</h2></div>
+    <p class="sec-desc">让数据活得比容器久。容器自己的文件系统是临时的，存数据只有两种正经办法：</p>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>方式</th><th>写法</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td class="cmd">命名卷</td><td class="desc"><code>-v mydata:/data</code></td><td class="desc">数据存在 Docker 管的目录里（<code>docker volume inspect</code> 看 Mountpoint），适合数据库等只给容器用的数据</td></tr>
+        <tr><td class="cmd">绑定挂载</td><td class="desc"><code>-v /data/home/目录:/data</code></td><td class="desc">就是宿主机上明明白白的目录，适合网页、配置等要直接看和改的文件</td></tr>
+      </tbody>
+    </table></div></div>
+    <div class="codeblock">
+      <div class="bar"><span>BASH · 机器内</span><button data-copy="docker volume create mydata&#10;docker run --rm -v mydata:/data alpine sh -c 'echo &quot;saved in volume&quot; &gt; /data/note.txt'&#10;docker run --rm -v mydata:/data alpine cat /data/note.txt&#10;docker volume ls&#10;docker volume inspect mydata&#10;docker volume rm mydata">复制整段</button></div>
+      <pre><code>docker volume create mydata
+docker run --rm -v mydata:/data alpine sh -c 'echo "saved in volume" &gt; /data/note.txt'
+docker run --rm -v mydata:/data alpine cat /data/note.txt   <span class="cm"># 换个全新容器也能读到 = 数据在卷里，不在容器里</span>
+docker volume ls / inspect 名字 / rm 名字</code></pre>
+    </div>
+    <div class="note tip"><span class="ic">💡</span><p><strong>绑定挂载即时生效：</strong>宿主机改文件，容器里立刻变（实测首页 Version 1 → Version 2，没重打镜像、没重启容器）。分工：<strong>调试用挂载图方便，交付用 Dockerfile 的 COPY 把文件焊进镜像</strong>。compose 里写法：服务下 <code>volumes: - mydata:/data</code>，文件末尾再加顶层 <code>volumes: { mydata: }</code> 声明。仓库那课的 <code>-v /data/home/registry-data</code> 就是绑定挂载。</p></div>
+  </section>
+
+  <!-- 九 -->
+  <section id="s9" data-search-section>
+    <div class="sec-head"><span class="sec-no">09</span><h2>自动重启 --restart</h2></div>
+    <p class="sec-desc">让容器挂了自己爬起来。四种策略：</p>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>策略</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td class="cmd"><code>no</code></td><td class="desc">默认，不重启</td></tr>
+        <tr><td class="cmd"><code>on-failure[:N]</code></td><td class="desc">进程以非 0 退出才拉，最多 N 次</td></tr>
+        <tr><td class="cmd"><code>always</code></td><td class="desc">总是拉</td></tr>
+        <tr><td class="cmd"><code>unless-stopped</code></td><td class="desc">总是拉，除非被手动停过 —— 最常用，推荐</td></tr>
+      </tbody>
+    </table></div></div>
+    <div class="codeblock">
+      <div class="bar"><span>BASH · 自崩演示</span><button data-copy="docker run -d --name crash --restart always alpine sh -c 'sleep 3; exit 1'&#10;docker ps -a&#10;docker inspect -f '{{.RestartCount}}' crash&#10;docker rm -f crash">复制整段</button></div>
+      <pre><code><span class="cm"># 进程按自己的逻辑退出 = 无人值守的猝死，策略会拉起它</span>
+docker run -d --name crash --restart always alpine sh -c 'sleep 3; exit 1'
+docker inspect -f '{{.RestartCount}}' crash   <span class="cm"># 实测 8 秒涨到 7</span>
+docker rm -f crash                            <span class="cm"># 失控演示容器一步强拆</span></code></pre>
+    </div>
+    <div class="card card-pad">
+      <ul class="tight" style="margin:0">
+        <li><strong>只对“进程自己死”生效</strong>：程序自崩、自退出 → 策略拉起，RestartCount 增长（上方演示实测）</li>
+        <li><strong><code>docker stop</code> / <code>docker kill</code> 不触发重启</strong>：这是操作员亲手下的停止指令，Docker 视为“手动让他停的”，策略不违抗</li>
+        <li><strong>容器内部 <code>kill -9 1</code> 杀不掉 PID 1</strong>：内核对命名空间 init 进程有信号保护，内部信号不投递；宿主机侧的 docker kill 不受此限</li>
+        <li><strong>InstaBox 场景</strong>：机器空闲暂停后恢复 ≈ Docker 重启一轮，容器设 <code>unless-stopped</code> 能自己回来；compose 里写一行 <code>restart: unless-stopped</code></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 十 -->
+  <section id="s10" data-search-section>
+    <div class="sec-head"><span class="sec-no">10</span><h2>学习进度</h2></div>
+    <p class="sec-desc">截至 2026-10-29：全部课程已实操通过，结课。</p>
     <div class="card">
       <div class="progress-bar"><i></i></div>
-      <div class="progress-meta">已完成 5 / 7</div>
+      <div class="progress-meta">已完成 7 / 7</div>
       <ul class="progress">
         <li class="done"><span class="box">✓</span><span class="txt"><strong>第一课：</strong>hello-world + nginx 容器、端口映射、port publish</span></li>
         <li class="done"><span class="box">✓</span><span class="txt"><strong>第二课：</strong>logs / exec 进容器 / stats / 先容器后镜像的清理顺序</span></li>
         <li class="done"><span class="box">✓</span><span class="txt"><strong>第三课：</strong>Dockerfile 打出自有镜像 <code>mynginx:v1</code>（<code>~/docker-lesson3</code>）</span></li>
         <li class="done"><span class="box">✓</span><span class="txt"><strong>第四课：</strong>compose 拉起 web + cache（redis）一组服务（<code>~/docker-lesson4</code>）</span></li>
         <li class="done"><span class="box">✓</span><span class="txt"><strong>进阶 · 仓库：</strong>自建 registry，mynginx 推送 → 删本地 → 拉回，指纹 <code>4c641273c0b7</code> 一致</span></li>
-        <li class="todo"><span class="box"></span><span class="txt"><strong>进阶 · 数据卷 volumes</strong>（正式课；仓库那课已用 <code>-v</code> 摸过）</span></li>
-        <li class="todo"><span class="box"></span><span class="txt"><strong>进阶 · 自动重启</strong> <code>--restart</code>（让容器挂了自己爬起来、机器重启后自动恢复）</span></li>
+        <li class="done"><span class="box">✓</span><span class="txt"><strong>第五课 · 数据卷：</strong>命名卷跨容器读回数据；绑定挂载改宿主机文件即时生效</span></li>
+        <li class="done"><span class="box">✓</span><span class="txt"><strong>第六课 · 自动重启：</strong>自崩进程被策略拉起（RestartCount 涨到 7）；stop/kill 不触发、容器内杀 PID 1 被内核挡下，均实测确认</span></li>
       </ul>
     </div>
   </section>
