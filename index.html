@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>InstaBox + Docker 速查表</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f6f5;
+    --bg-elev:#ffffff;
+    --bg-code:#101613;
+    --code-text:#d7e8dd;
+    --ink:#182420;
+    --ink-2:#4a5a53;
+    --ink-3:#7c8a83;
+    --line:#dde5e0;
+    --line-strong:#c4d2ca;
+    --accent:#0b7a5c;
+    --accent-ink:#ffffff;
+    --accent-soft:#e3f2ec;
+    --amber:#b45309;
+    --amber-soft:#fef3d8;
+    --red:#b42318;
+    --red-soft:#fdecea;
+    --chip-bg:#e9efec;
+    --shadow:0 1px 2px rgba(16,30,24,.05),0 8px 24px rgba(16,30,24,.05);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0e1210;
+      --bg-elev:#161d1a;
+      --bg-code:#0a0e0c;
+      --code-text:#cfe6d8;
+      --ink:#e8efec;
+      --ink-2:#a7b8b0;
+      --ink-3:#77887f;
+      --line:#26322c;
+      --line-strong:#35473d;
+      --accent:#2fbf93;
+      --accent-ink:#06231a;
+      --accent-soft:#123328;
+      --amber:#f2b04a;
+      --amber-soft:#33270e;
+      --red:#ff8a7a;
+      --red-soft:#3a1a16;
+      --chip-bg:#1e2823;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+    }
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;scroll-padding-top:132px}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans SC",-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;
+  }
+  code,pre,kbd{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .wrap{max-width:780px;margin:0 auto;padding:0 16px 64px}
+
+  /* ---------- header ---------- */
+  header.hero{padding:28px 0 6px}
+  .hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  h1{font-size:27px;line-height:1.25;font-weight:900;letter-spacing:-.01em;margin:0}
+  h1 .plus{color:var(--accent)}
+  .hero-sub{color:var(--ink-2);font-size:14.5px;margin:10px 0 0;max-width:56ch}
+  .hero-sub strong{color:var(--ink)}
+  .machine-pill{
+    flex:none;display:inline-flex;align-items:center;gap:7px;margin-top:4px;
+    background:var(--bg-elev);border:1px solid var(--line);border-radius:999px;
+    padding:6px 11px;font-size:12px;color:var(--ink-2);box-shadow:var(--shadow);white-space:nowrap;
+  }
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+  .machine-pill code{font-size:11.5px;color:var(--ink)}
+  .rule-card{
+    margin-top:18px;background:var(--accent-soft);border:1px solid var(--line);
+    border-radius:var(--radius);padding:14px 16px;display:flex;gap:12px;align-items:flex-start;
+  }
+  .rule-card .n{font-size:22px;line-height:1.2;flex:none}
+  .rule-card p{margin:0;font-size:14.5px}
+  .rule-card code{background:var(--bg-elev);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:13px;white-space:nowrap}
+
+  /* ---------- sticky tools ---------- */
+  .tools{
+    position:sticky;top:0;z-index:20;margin:18px -16px 0;padding:10px 16px 10px;
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .search{position:relative}
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--ink-3);pointer-events:none}
+  .search input{
+    width:100%;height:46px;border:1px solid var(--line-strong);border-radius:12px;
+    background:var(--bg-elev);color:var(--ink);font-size:16px;padding:0 40px 0 38px;outline:none;
+    font-family:inherit;
+  }
+  .search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .search .clear{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;border-radius:9px;
+    background:transparent;color:var(--ink-3);font-size:18px;display:none;cursor:pointer;line-height:1;
+  }
+  .search.has-text .clear{display:block}
+  .navchips{display:flex;gap:8px;overflow-x:auto;padding:10px 2px 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .navchips::-webkit-scrollbar{display:none}
+  .navchips a{
+    flex:none;text-decoration:none;color:var(--ink-2);background:var(--chip-bg);
+    border:1px solid var(--line);border-radius:999px;padding:6px 13px;font-size:13.5px;font-weight:500;
+  }
+  .navchips a:active{background:var(--accent-soft);color:var(--accent)}
+  .noresult{display:none;margin-top:16px;background:var(--bg-elev);border:1px dashed var(--line-strong);border-radius:var(--radius);padding:20px;text-align:center;color:var(--ink-2);font-size:14.5px}
+  .noresult.show{display:block}
+
+  /* ---------- sections ---------- */
+  section{margin-top:34px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+  .sec-no{
+    font-family:"JetBrains Mono",monospace;font-weight:600;font-size:13px;color:var(--accent-ink);
+    background:var(--accent);border-radius:8px;padding:3px 9px;flex:none;transform:translateY(-2px);
+  }
+  h2{font-size:20px;font-weight:900;margin:0;line-height:1.35}
+  .sec-desc{color:var(--ink-2);font-size:14.5px;margin:6px 0 14px}
+  h3.sub{font-size:15.5px;font-weight:700;margin:22px 0 10px;display:flex;align-items:center;gap:8px}
+  h3.sub::before{content:"";width:4px;height:16px;border-radius:2px;background:var(--accent);flex:none}
+  h3.sub:first-of-type{margin-top:14px}
+
+  .card{background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .card + .card{margin-top:12px}
+  .card-pad{padding:16px}
+
+  /* tables */
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{width:100%;border-collapse:collapse;font-size:14.5px;min-width:0}
+  th{
+    text-align:left;font-size:12px;letter-spacing:.06em;color:var(--ink-3);font-weight:700;
+    padding:10px 14px 8px;border-bottom:1px solid var(--line);white-space:nowrap;background:transparent;
+  }
+  td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  td.cmd{width:58%}
+  td.cmd code{
+    font-size:13px;line-height:1.55;color:var(--ink);word-break:break-word;overflow-wrap:anywhere;
+  }
+  td.desc{color:var(--ink-2)}
+  .copy-btn{
+    display:inline-flex;align-items:center;gap:4px;margin-left:8px;vertical-align:2px;
+    border:1px solid var(--line);background:var(--bg);color:var(--ink-3);border-radius:7px;
+    font-size:11px;padding:2px 7px;cursor:pointer;font-family:inherit;white-space:nowrap;
+  }
+  .copy-btn:active{color:var(--accent);border-color:var(--accent)}
+  .copy-btn.ok{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+  tr.hidden-row{display:none}
+
+  /* code blocks */
+  .codeblock{position:relative;background:var(--bg-code);border-radius:var(--radius);overflow:hidden;margin:12px 0}
+  .codeblock .bar{
+    display:flex;align-items:center;justify-content:space-between;padding:8px 12px 8px 16px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .codeblock .bar span{font-size:11.5px;letter-spacing:.08em;color:#8fa89b;font-family:"JetBrains Mono",monospace}
+  .codeblock .bar button{
+    border:1px solid rgba(255,255,255,.18);background:transparent;color:#cfe6d8;border-radius:7px;
+    font-size:11.5px;padding:4px 10px;cursor:pointer;font-family:inherit;
+  }
+  .codeblock .bar button.ok{color:#2fbf93;border-color:#2fbf93}
+  .codeblock pre{margin:0;padding:14px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .codeblock pre code{font-size:13px;line-height:1.7;color:var(--code-text);white-space:pre}
+  .cm{color:#7d968a}
+  p code, li code{
+    background:var(--chip-bg);border:1px solid var(--line);border-radius:6px;padding:0 5px;
+    font-size:.86em;word-break:break-word;
+  }
+
+  /* diagram breakdown */
+  .anatomy{display:flex;flex-direction:column;gap:0}
+  .anatomy .row{display:flex;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);align-items:flex-start}
+  .anatomy .row:last-child{border-bottom:0}
+  .anatomy .k{flex:none;width:118px}
+  .anatomy .k code{font-size:12.5px;font-weight:600;color:var(--accent);word-break:break-all}
+  .anatomy .v{font-size:14px;color:var(--ink-2)}
+  .anatomy .v strong{color:var(--ink)}
+  @media (max-width:480px){ .anatomy .k{width:96px} td.cmd{width:55%} h1{font-size:24px} .machine-pill{display:none} }
+
+  /* lists */
+  ul.tight, ol.steps{margin:10px 0;padding-left:22px}
+  ul.tight li, ol.steps li{margin:7px 0;color:var(--ink-2);font-size:14.5px}
+  ul.tight li strong, ol.steps li strong{color:var(--ink)}
+  ol.steps li::marker{color:var(--accent);font-weight:700}
+
+  .concept{display:grid;gap:0}
+  .concept .row{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);align-items:flex-start}
+  .concept .row:last-child{border-bottom:0}
+  .concept .term{flex:none;width:86px;font-weight:700;font-size:14px}
+  .concept .term small{display:block;font-weight:400;color:var(--ink-3);font-family:"JetBrains Mono",monospace;font-size:11px;margin-top:1px}
+  .concept .def{font-size:14.5px;color:var(--ink-2)}
+  .concept .def strong{color:var(--ink)}
+
+  .note{
+    border-radius:var(--radius);padding:14px 16px;margin:12px 0;font-size:14.5px;display:flex;gap:11px;align-items:flex-start;
+  }
+  .note .ic{flex:none;font-size:17px;line-height:1.5}
+  .note p{margin:0;color:var(--ink-2)}
+  .note p strong{color:var(--ink)}
+  .note.warn{background:var(--amber-soft);border:1px solid color-mix(in srgb, var(--amber) 35%, transparent)}
+  .note.danger{background:var(--red-soft);border:1px solid color-mix(in srgb, var(--red) 30%, transparent)}
+  .note.tip{background:var(--accent-soft);border:1px solid var(--line)}
+
+  /* progress */
+  .progress{list-style:none;margin:0;padding:6px 0}
+  .progress li{display:flex;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);align-items:flex-start;font-size:14.5px}
+  .progress li:last-child{border-bottom:0}
+  .progress .box{
+    flex:none;width:22px;height:22px;border-radius:7px;margin-top:1px;display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:700;
+  }
+  .progress li.done .box{background:var(--accent);color:var(--accent-ink)}
+  .progress li.todo .box{border:2px solid var(--line-strong);color:transparent}
+  .progress li.todo .txt{color:var(--ink-3)}
+  .progress .txt{color:var(--ink-2)}
+  .progress .txt strong{color:var(--ink)}
+  .progress li.todo .txt strong{color:var(--ink-2)}
+  .progress .txt code{font-size:12.5px}
+  .progress-bar{height:8px;border-radius:99px;background:var(--chip-bg);overflow:hidden;margin:14px 16px 4px}
+  .progress-bar i{display:block;height:100%;width:71.4%;background:var(--accent);border-radius:99px}
+  .progress-meta{padding:0 16px 14px;font-size:12.5px;color:var(--ink-3)}
+
+  footer{margin-top:44px;border-top:1px solid var(--line);padding-top:18px;color:var(--ink-3);font-size:13px;line-height:1.7}
+  footer code{font-size:12px}
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translate(-50%,16px);z-index:50;
+    background:var(--ink);color:var(--bg);font-size:13.5px;padding:9px 18px;border-radius:999px;
+    opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;box-shadow:var(--shadow);
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  section.filtered-out{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="hero-top">
+      <h1>InstaBox <span class="plus">+</span> Docker<br>常用指令速查表</h1>
+      <span class="machine-pill"><span class="dot"></span>我的机器 <code>my-machine</code></span>
+    </div>
+    <p class="hero-sub">记不住没关系，记住套路即可。手机上随手查：点任意命令旁的「复制」就能粘贴使用，顶部搜索框可以按关键词过滤。</p>
+    <div class="rule-card">
+      <div class="n">🧩</div>
+      <p><strong>命令的拼法套路：</strong><code>工具 子命令 对象 参数</code> —— 先想清楚「对什么对象、做什么动作」，命令基本就拼出来了。任何命令后面加 <code>--help</code>，就是它自己的说明书。</p>
+    </div>
+  </header>
+
+  <div class="tools">
+    <div class="search" id="searchBox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="searchInput" type="search" placeholder="搜命令，如 logs / snapshot / 端口…" autocomplete="off" />
+      <button class="clear" id="searchClear" aria-label="清除搜索">✕</button>
+    </div>
+    <nav class="navchips" aria-label="章节导航">
+      <a href="#s1">① 拼法</a>
+      <a href="#s2">② InstaBox</a>
+      <a href="#s3">③ Docker</a>
+      <a href="#s4">④ 自助查法</a>
+      <a href="#s5">⑤ 机器注意点</a>
+      <a href="#s6">⑥ Dockerfile</a>
+      <a href="#s7">⑦ 私有仓库</a>
+      <a href="#s8">⑧ 学习进度</a>
+    </nav>
+  </div>
+
+  <div class="noresult" id="noResult">没有匹配的命令，换个关键词试试，或点 ✕ 清除搜索。</div>
+
+  <!-- 一 -->
+  <section id="s1" data-search-section>
+    <div class="sec-head"><span class="sec-no">01</span><h2>命令是怎么拼出来的</h2></div>
+    <p class="sec-desc">以这条为例，拆开就是四层。看懂一条，其余的都是同一个套路。</p>
+    <div class="codeblock">
+      <div class="bar"><span>ANATOMY</span><button data-copy="npx instabox@latest exec my-machine -- docker ps">复制整条</button></div>
+      <pre><code>npx instabox@latest exec my-machine -- docker ps
+│   │               │    │                   │  └─ 在机器里真正执行的命令
+│   │               │    │                   └──── 分隔符：后面是“给机器的命令”
+│   │               │    └──────────────────────── 目标机器名
+│   │               └───────────────────────────── 动作：在机器里执行命令
+│   └───────────────────────────────────────────── instabox 这个工具
+└───────────────────────────────────────────────── npx：临时下载并运行这个工具</code></pre>
+    </div>
+    <div class="card anatomy">
+      <div class="row"><div class="k"><code>npx</code></div><div class="v"><strong>临时下载并运行</strong>这个工具，免安装</div></div>
+      <div class="row"><div class="k"><code>instabox@latest</code></div><div class="v"><strong>工具本体</strong>，@latest 表示用最新版</div></div>
+      <div class="row"><div class="k"><code>exec</code></div><div class="v"><strong>动作</strong>：在机器里执行命令</div></div>
+      <div class="row"><div class="k"><code>my-machine</code></div><div class="v"><strong>目标机器名</strong>，对哪台机器做这个动作</div></div>
+      <div class="row"><div class="k"><code>--</code></div><div class="v"><strong>分隔符</strong>：后面是「给机器的命令」，不再是 instabox 自己的参数</div></div>
+      <div class="row"><div class="k"><code>docker ps</code></div><div class="v">在机器里<strong>真正执行的命令</strong></div></div>
+    </div>
+    <div class="note tip"><span class="ic">💡</span><p>规律：先想清楚「对什么对象、做什么动作」，命令基本就拼出来了。</p></div>
+  </section>
+
+  <!-- 二 -->
+  <section id="s2" data-search-section>
+    <div class="sec-head"><span class="sec-no">02</span><h2>InstaBox 常用命令</h2></div>
+    <p class="sec-desc">在本机 PowerShell 里跑。全局安装后不用每次加 <code>npx instabox@latest</code> 前缀：<code>npm install -g instabox</code>。</p>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>命令</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td class="cmd"><code>instabox ls</code></td><td class="desc">看我的机器和状态</td></tr>
+        <tr><td class="cmd"><code>instabox ssh &lt;机器名&gt;</code></td><td class="desc">进入机器的 Shell</td></tr>
+        <tr><td class="cmd"><code>instabox exec &lt;机器名&gt; -- &lt;命令&gt;</code></td><td class="desc">不进 Shell，直接在机器里跑一条命令</td></tr>
+        <tr><td class="cmd"><code>instabox create --name N</code></td><td class="desc">新开一台机器</td></tr>
+        <tr><td class="cmd"><code>instabox suspend &lt;机器名&gt;</code> / <code>resume</code></td><td class="desc">暂停 / 恢复</td></tr>
+        <tr><td class="cmd"><code>instabox stop &lt;机器名&gt;</code> / <code>start</code></td><td class="desc">停机 / 开机</td></tr>
+        <tr><td class="cmd"><code>instabox rm &lt;机器名&gt;</code></td><td class="desc">删除机器（快照不删）</td></tr>
+        <tr><td class="cmd"><code>instabox port publish &lt;机器名&gt; &lt;端口&gt;</code></td><td class="desc">把端口变成公开 HTTPS 地址</td></tr>
+        <tr><td class="cmd"><code>instabox port unpublish &lt;机器名&gt; &lt;端口&gt;</code></td><td class="desc">关闭公开地址</td></tr>
+        <tr><td class="cmd"><code>instabox cp [-p] 本地文件 &lt;机器名&gt;:/路径</code></td><td class="desc">传文件进机器（反过来是拉出来，-p 自动建目录）</td></tr>
+        <tr><td class="cmd"><code>instabox snapshot save &lt;机器名&gt; --name N</code></td><td class="desc">存快照（会先停机，文件保留）</td></tr>
+        <tr><td class="cmd"><code>instabox snapshot ls</code></td><td class="desc">看已有快照</td></tr>
+        <tr><td class="cmd"><code>instabox usage</code></td><td class="desc">看额度与用量</td></tr>
+      </tbody>
+    </table></div></div>
+    <div class="note tip"><span class="ic">🔑</span><p><strong>为什么 <code>instabox ssh 机器名</code> 一句话就能进：</strong>普通 SSH 要自己备齐地址、端口、用户名、密钥；instabox 用你本机的登录态向服务器证明身份，服务器确认权限后发临时凭证，CLI 在底下替你把真正的 SSH 连接拨好。方便的代价是信任全押在登录态上 —— 本机别借人乱用，登录态和 API key 按密码级别保管。</p></div>
+    <div class="note warn"><span class="ic">💻</span><p><strong>换一台电脑登录：</strong>账号跟着人走，不跟电脑走。新电脑装好 Node.js 后跑 <code>npx instabox@latest</code>，按提示打开网址、用<strong>当初注册的同一个账号</strong>输设备码确认；再 <code>npm install -g instabox</code> 装全局版，新开窗口用 <code>instabox ls</code> 验证即可。机器和快照都在账号名下，换电脑不丢；若手滑登成新账号会看到空账号，退出来换回原账号即可。</p></div>
+  </section>
+
+  <!-- 三 -->
+  <section id="s3" data-search-section>
+    <div class="sec-head"><span class="sec-no">03</span><h2>Docker 常用命令</h2></div>
+    <p class="sec-desc">在机器里跑（先 <code>instabox ssh</code> 进去）。主线记住一条链：<strong>写配方（Dockerfile）→ 产镜像（build）→ 开容器（run / compose up）</strong>。</p>
+
+    <h3 class="sub">容器</h3>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>命令</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td class="cmd"><code>docker ps</code></td><td class="desc">正在运行的容器</td></tr>
+        <tr><td class="cmd"><code>docker ps -a</code></td><td class="desc">所有容器（含已停止）</td></tr>
+        <tr><td class="cmd"><code>docker run -d --name 名字 -p 宿主机端口:容器端口 镜像名</code></td><td class="desc">后台启动一个容器</td></tr>
+        <tr><td class="cmd"><code>docker run hello-world</code></td><td class="desc">官方问候容器（测试安装用）</td></tr>
+        <tr><td class="cmd"><code>docker logs 名字</code></td><td class="desc">看容器输出日志（-f 持续跟踪，Ctrl+C 退出跟踪，容器不受影响）</td></tr>
+        <tr><td class="cmd"><code>docker exec -it 名字 bash</code></td><td class="desc">进入正在运行的容器内部（-it = 给一个能打字的终端）</td></tr>
+        <tr><td class="cmd"><code>docker stop 名字</code> / <code>docker start 名字</code></td><td class="desc">停止 / 启动容器</td></tr>
+        <tr><td class="cmd"><code>docker restart 名字</code></td><td class="desc">重启容器</td></tr>
+        <tr><td class="cmd"><code>docker rm 名字</code></td><td class="desc">删除容器（先 stop，-f 强制）</td></tr>
+        <tr><td class="cmd"><code>docker stats</code></td><td class="desc">看各容器 CPU / 内存占用（Ctrl+C 退出）</td></tr>
+      </tbody>
+    </table></div></div>
+    <div class="note warn"><span class="ic">⚠️</span><p>在容器里改的文件只活在<strong>这个容器</strong>身上，容器一删就没，镜像不变。想把改动存下来 → 写进 Dockerfile 做成镜像；想让数据在容器删除后还活着 → 用数据卷（volumes）。清理顺序永远是<strong>先删容器、再删镜像</strong>。</p></div>
+
+    <h3 class="sub">镜像</h3>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>命令</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td class="cmd"><code>docker images</code></td><td class="desc">本地镜像列表</td></tr>
+        <tr><td class="cmd"><code>docker pull 镜像名</code></td><td class="desc">下载镜像（默认从 Docker Hub 拉）</td></tr>
+        <tr><td class="cmd"><code>docker build -t 名字:标签 .</code></td><td class="desc">按当前目录 Dockerfile 打镜像（最后的 <code>.</code> = 配方在当前目录，别漏）</td></tr>
+        <tr><td class="cmd"><code>docker tag 旧名 新名</code></td><td class="desc">给镜像再起一个名字（推送前改名用）</td></tr>
+        <tr><td class="cmd"><code>docker push 镜像名</code></td><td class="desc">把镜像推到仓库</td></tr>
+        <tr><td class="cmd"><code>docker rmi 镜像名</code></td><td class="desc">删除镜像（被容器引用时先删容器）；只想腾磁盘时才删，留着下次 run 不用重下</td></tr>
+      </tbody>
+    </table></div></div>
+    <p class="sec-desc" style="margin-top:12px">镜像默认从 <strong>Docker Hub</strong>（hub.docker.com）拉：<code>nginx</code> 的完整名其实是 <code>docker.io/library/nginx</code>，library 是官方命名空间。其他仓库还有 GitHub 的 <code>ghcr.io</code>、Google 的 <code>gcr.io</code>，企业内部常用自建 Harbor。养成 <code>-t 名字:版本号</code> 的习惯（如 <code>mynginx:v1</code>），以后才分得清哪版是哪版。</p>
+
+    <h3 class="sub">Compose 与清理</h3>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>命令</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td class="cmd"><code>docker compose up -d</code></td><td class="desc">按 compose.yaml 一次拉起一组服务</td></tr>
+        <tr><td class="cmd"><code>docker compose down</code></td><td class="desc">停掉并清掉这组服务（镜像不删）</td></tr>
+        <tr><td class="cmd"><code>docker compose ps</code> / <code>logs</code></td><td class="desc">看这组服务的状态 / 日志（一组一起看）</td></tr>
+        <tr><td class="cmd"><code>docker compose exec 服务名 命令</code></td><td class="desc">在组内某个服务里执行命令，如 <code>exec cache redis-cli ping</code>（返回 PONG = 活着）</td></tr>
+        <tr><td class="cmd"><code>docker system df</code></td><td class="desc">看 Docker 占了多少磁盘</td></tr>
+        <tr><td class="cmd"><code>docker system prune</code></td><td class="desc">清理无用容器 / 网络 / 镜像（会问确认，慎用）</td></tr>
+      </tbody>
+    </table></div></div>
+    <p class="sec-desc" style="margin-top:12px">compose 自动帮你办的事：建专属网络、<strong>服务之间用服务名互访</strong>（web 连缓存直接用 <code>cache:6379</code>，不用查 IP）、容器统一命名、一条 up 全起、一条 down 全清。看 ps 输出时注意区别：<code>0.0.0.0:8080-&gt;80</code> 是对外映射了；只有 <code>6379/tcp</code> 表示只在组内互通、没暴露给宿主机 —— 数据库类服务就该这么藏着。</p>
+
+    <h3 class="sub">概念对照</h3>
+    <div class="card concept">
+      <div class="row"><div class="term">镜像<small>image</small></div><div class="def">= 模板（像<strong>安装光盘</strong>）</div></div>
+      <div class="row"><div class="term">容器<small>container</small></div><div class="def">= 用模板跑起来的实例（像<strong>装好并开机的系统</strong>）</div></div>
+      <div class="row"><div class="term">端口映射<small>-p 8080:80</small></div><div class="def">= 把机器的 8080 端口转发进容器的 80 端口，格式是 <strong>外:内</strong></div></div>
+      <div class="row"><div class="term">判断口诀<small>rule</small></div><div class="def">定制<strong>单个服务的内容</strong> → 改 Dockerfile；协调<strong>多个服务的协作</strong> → 改 compose.yaml</div></div>
+    </div>
+    <div class="note danger"><span class="ic">🚨</span><p><strong>一条红线：</strong>日志里 Redis 那句 <code>does not require authentication</code> 是在提醒它没密码。练习时没映射端口、外面连不进来，没事；但<strong>永远不要把没密码的 Redis 端口 publish / 映射到公网</strong>，这是真实世界里被入侵的重灾区。另外，容器日志时间是 UTC，比本地晚 8 小时，对时间点时别被绕晕。</p></div>
+  </section>
+
+  <!-- 四 -->
+  <section id="s4" data-search-section>
+    <div class="sec-head"><span class="sec-no">04</span><h2>不知道命令时怎么办</h2></div>
+    <p class="sec-desc">按这个顺序来，基本不用死记硬背。</p>
+    <div class="card card-pad">
+      <ol class="steps" style="margin:0">
+        <li><code>命令 --help</code>，如 <code>docker run --help</code>、<code>instabox port --help</code> —— <strong>最快</strong></li>
+        <li><code>命令 子命令 --help</code>，逐层缩小</li>
+        <li>官方文档：<strong>instabox.sh/docs</strong>、<strong>docs.docker.com</strong></li>
+        <li>直接把<strong>报错原文</strong>贴给 Muse，让它拆给你听 —— 看报错、改拼写（如 <code>cat 网址</code> 应为 <code>curl</code>、<code>dockr</code> 是拼写错误）就是日常排障的常态</li>
+      </ol>
+    </div>
+    <div class="note tip"><span class="ic">📂</span><p><strong>什么时候要关心当前目录：</strong>只有命令里出现相对路径时才需要 —— 比如 <code>docker build .</code> 的那个点、<code>docker compose up</code> 要找当前目录的 compose.yaml。纯粹的 run / tag / push / pull 跟 daemon 打交道，在哪个目录敲都一样；回家目录用 <code>cd ~</code>（即 <code>/data/home</code>）。</p></div>
+  </section>
+
+  <!-- 五 -->
+  <section id="s5" data-search-section>
+    <div class="sec-head"><span class="sec-no">05</span><h2>InstaBox 这台机器的注意点</h2></div>
+    <div class="card card-pad">
+      <ul class="tight" style="margin:0">
+        <li>家目录在 <code>/data/home</code>，<strong>重要文件放 <code>/data</code> 下</strong>，快照才会带走</li>
+        <li>免费档<strong>空闲 30 分钟自动暂停</strong>；恢复后没设重启策略的 Docker 容器不会自动起来，用 <code>docker start</code> 拉回</li>
+        <li><code>port publish</code> 的地址是<strong>公开的、无鉴权</strong>，练习完记得 <code>unpublish</code></li>
+        <li><code>instabox exec 机器名 -- 命令</code> 有个怪癖：命令里带 <code>-a</code> 这类参数会被它误解析成自己的参数而报错。两个绕法：命令用引号包成一整串 <code>-- 'docker ps -a'</code>，或者直接 <code>instabox ssh</code> 进去敲（练 Docker 时推荐后者）</li>
+      </ul>
+    </div>
+    <div class="note warn"><span class="ic">🌐</span><p><strong>publish 的地址能 CNAME 到 Cloudflare 提速吗？不能。</strong>那串子域名本身编码了「哪台机器、哪个端口」，网关靠它认人路由，换成你的域名它不认识，大概率直接报 “This URL is not published”；而且 CNAME 只是 DNS 别名，解析到的还是同一批 IP、同一条线路，本身不加速。这类地址是临时调试入口，机器暂停就失效，天生不适合长期绑域名。绑域名长期跑的服务，应该放在自己能控制的机器上（如 Oregon 的 VPS）再走 Cloudflare。</p></div>
+  </section>
+
+  <!-- 六 -->
+  <section id="s6" data-search-section>
+    <div class="sec-head"><span class="sec-no">06</span><h2>Dockerfile 速记</h2></div>
+    <p class="sec-desc">管「<strong>一个镜像怎么做出来</strong>」，是构建期的事：<code>docker build</code> 从上到下逐行执行，每执行一条就给镜像叠一层。文件名就叫 <code>Dockerfile</code>，没有扩展名。</p>
+    <div class="codeblock">
+      <div class="bar"><span>DOCKERFILE · 我的第一份（~/docker-lesson3）</span><button data-copy="FROM nginx:latest&#10;COPY index.html /usr/share/nginx/html/index.html">复制</button></div>
+      <pre><code>FROM nginx:latest                                  <span class="cm"># 基础镜像（第一行）</span>
+COPY index.html /usr/share/nginx/html/index.html   <span class="cm"># 拷文件进镜像</span></code></pre>
+    </div>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>指令</th><th>干什么</th></tr></thead>
+      <tbody>
+        <tr><td class="cmd"><code>FROM</code></td><td class="desc">指定基础镜像，必须是第一行（构建时）</td></tr>
+        <tr><td class="cmd"><code>COPY</code></td><td class="desc">把文件拷进镜像（构建时）</td></tr>
+        <tr><td class="cmd"><code>RUN</code></td><td class="desc">构建时执行一条命令，如装软件</td></tr>
+        <tr><td class="cmd"><code>WORKDIR</code></td><td class="desc">设定工作目录</td></tr>
+        <tr><td class="cmd"><code>ENV</code></td><td class="desc">设定环境变量（构建时定下、运行时生效）</td></tr>
+        <tr><td class="cmd"><code>EXPOSE</code></td><td class="desc">声明这个镜像监听哪个端口（只是声明，不等于对外发布）</td></tr>
+        <tr><td class="cmd"><code>CMD</code></td><td class="desc">容器启动时默认执行什么（运行时）</td></tr>
+      </tbody>
+    </table></div></div>
+    <div class="note tip"><span class="ic">⚡</span><p><strong>层与缓存：</strong>每条指令是一层，层带缓存。只改了 index.html 重新 build，只有 COPY 那层重做，前面的层直接复用，所以第二次特别快。经验法则：<strong>不常变的写前面（装依赖），常变的写后面（拷代码）</strong>。</p></div>
+
+    <h3 class="sub">compose.yaml 对照</h3>
+    <p class="sec-desc">管「<strong>一组容器怎么一起跑</strong>」，是运行期的事。它不关心镜像内部怎么做，只描述要哪几个服务、用什么镜像、端口怎么映射、谁和谁连。</p>
+    <div class="codeblock">
+      <div class="bar"><span>COMPOSE.YAML · 第四课（~/docker-lesson4）</span><button data-copy="services:&#10;  web:&#10;    image: mynginx:v1&#10;    ports:&#10;      - &quot;8080:80&quot;&#10;  cache:&#10;    image: redis:latest">复制</button></div>
+      <pre><code>services:
+  web:                    <span class="cm"># 服务名，同时也是组内的“通讯录名字”</span>
+    image: mynginx:v1     <span class="cm"># 用哪个镜像（也可写 build: 现场按 Dockerfile 构建）</span>
+    ports:
+      - "8080:80"         <span class="cm"># 对外映射</span>
+  cache:
+    image: redis:latest   <span class="cm"># 没写 ports，所以只在组内互通</span></code></pre>
+    </div>
+    <div class="card card-pad">
+      <ul class="tight" style="margin:0">
+        <li>常见字段：<code>volumes</code>（挂数据）、<code>environment</code>（传环境变量）、<code>restart</code>（自动重启策略）、<code>depends_on</code>（声明启动顺序依赖）</li>
+        <li>起 compose 前先看端口有没有被别的容器占着（如 8080 被 web3 占着时，先 <code>docker stop web3 &amp;&amp; docker rm web3</code>）</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 七 -->
+  <section id="s7" data-search-section>
+    <div class="sec-head"><span class="sec-no">07</span><h2>私有镜像仓库（registry）实操流程</h2></div>
+    <p class="sec-desc">镜像默认从 Docker Hub 拉，也可以自己搭一个私有仓库：仓库本身就是个官方镜像。完整闭环是 <strong>搭仓库 → 推镜像 → 删本地 → 从仓库拉回来跑</strong>。这课对当前目录没要求，在哪敲都行。</p>
+    <div class="codeblock">
+      <div class="bar"><span>BASH · 机器内</span><button data-copy="docker run -d -p 5000:5000 -v /data/home/registry-data:/var/lib/registry --name registry registry:2&#10;curl http://localhost:5000/v2/&#10;curl http://localhost:5000/v2/_catalog&#10;docker tag mynginx:v1 localhost:5000/mynginx:v1&#10;docker push localhost:5000/mynginx:v1&#10;curl http://localhost:5000/v2/mynginx/tags/list&#10;docker pull localhost:5000/mynginx:v1">复制整段</button></div>
+      <pre><code><span class="cm"># 1. 起仓库（-v 让仓库数据存进 /data，容器删了镜像还在）</span>
+docker run -d -p 5000:5000 -v /data/home/registry-data:/var/lib/registry --name registry registry:2
+curl http://localhost:5000/v2/            <span class="cm"># 返回 {} = 活着</span>
+curl http://localhost:5000/v2/_catalog    <span class="cm"># 看仓库里有哪些镜像</span>
+
+<span class="cm"># 2. 推送：名字第一段带“仓库地址”才知道往哪推</span>
+docker tag mynginx:v1 localhost:5000/mynginx:v1
+docker push localhost:5000/mynginx:v1
+curl http://localhost:5000/v2/mynginx/tags/list   <span class="cm"># 看某个镜像的标签</span>
+
+<span class="cm"># 3. 拉回：删本地 → 从仓库 pull → digest 指纹一致才算真闭环</span>
+docker pull localhost:5000/mynginx:v1</code></pre>
+    </div>
+    <div class="card card-pad">
+      <ul class="tight" style="margin:0">
+        <li>没带仓库前缀的名字（如 <code>mynginx:v1</code>）只是本地名，哪也推不了；<code>docker pull nginx</code> 默认去 Docker Hub。判断门道：<strong>名字第一段带不带 “.” 或端口，决定去哪个仓库</strong></li>
+        <li>想推到 Docker Hub 公共仓库同理：注册账号 <code>docker login</code> 后，<code>docker tag mynginx:v1 你的用户名/mynginx:v1</code> 再 <code>docker push 你的用户名/mynginx:v1</code></li>
+        <li><strong>指纹（digest）认内容不认标签：</strong>镜像按内容算指纹存（内容寻址），push 的摘要、删除时的 ID、拉回后的 ID 一致（如 <code>4c641273c0b7…</code>），就保证一字节不差；标签能改名，指纹改不了</li>
+        <li>仓库容器删掉没关系，数据在 <code>/data/home/registry-data</code> 里，下次同样命令再起仓库，镜像都还在 —— 这其实已经摸了一半数据卷</li>
+      </ul>
+    </div>
+    <div class="note danger"><span class="ic">🔒</span><p>自建仓库默认<strong>无鉴权、走明文 HTTP</strong>：只在机器内部练，不要 publish 到公网。哪天想让别的机器来拉，先给它加鉴权和 HTTPS —— 不然等于把仓库敞开在公网上，跟没密码的 Redis 一个道理。</p></div>
+  </section>
+
+  <!-- 八 -->
+  <section id="s8" data-search-section>
+    <div class="sec-head"><span class="sec-no">08</span><h2>学习进度</h2></div>
+    <p class="sec-desc">截至 2026-10-29：四节正课 + 仓库课已实操通过。</p>
+    <div class="card">
+      <div class="progress-bar"><i></i></div>
+      <div class="progress-meta">已完成 5 / 7</div>
+      <ul class="progress">
+        <li class="done"><span class="box">✓</span><span class="txt"><strong>第一课：</strong>hello-world + nginx 容器、端口映射、port publish</span></li>
+        <li class="done"><span class="box">✓</span><span class="txt"><strong>第二课：</strong>logs / exec 进容器 / stats / 先容器后镜像的清理顺序</span></li>
+        <li class="done"><span class="box">✓</span><span class="txt"><strong>第三课：</strong>Dockerfile 打出自有镜像 <code>mynginx:v1</code>（<code>~/docker-lesson3</code>）</span></li>
+        <li class="done"><span class="box">✓</span><span class="txt"><strong>第四课：</strong>compose 拉起 web + cache（redis）一组服务（<code>~/docker-lesson4</code>）</span></li>
+        <li class="done"><span class="box">✓</span><span class="txt"><strong>进阶 · 仓库：</strong>自建 registry，mynginx 推送 → 删本地 → 拉回，指纹 <code>4c641273c0b7</code> 一致</span></li>
+        <li class="todo"><span class="box">✓</span><span class="txt"><strong>进阶 · 数据卷 volumes</strong>（正式课；仓库那课已用 <code>-v</code> 摸过）</span></li>
+        <li class="todo"><span class="box">✓</span><span class="txt"><strong>进阶 · 自动重启</strong> <code>--restart</code>（让容器挂了自己爬起来、机器重启后自动恢复）</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    内容源自实际课程记录（机器 <code>my-machine</code>，Debian，Docker 29.8.2），命令均已在机器上实操验证。读日志小提醒：web 访问记录长这样 —— <code>172.18.0.1 - - "GET / HTTP/1.1" 200 33</code>，200 是状态码、33 是返回字节数，以后排障就靠对这种行。
+  </footer>
+</div>
+
+<div class="toast" id="toast">已复制，去终端粘贴吧</div>
+
+<script>
+(function(){
+  // copy buttons
+  var toast = document.getElementById('toast');
+  var toastTimer = null;
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toast.classList.remove('show'); }, 1600);
+  }
+  function copyText(text, btn){
+    function done(){
+      if(btn){ var old = btn.textContent; btn.textContent = '✓ 已复制'; btn.classList.add('ok');
+        setTimeout(function(){ btn.textContent = old; btn.classList.remove('ok'); }, 1500); }
+      showToast('已复制，去终端粘贴吧');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ fallback(); });
+    } else { fallback(); }
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); done(); }catch(e){ showToast('复制失败，长按选中手动复制'); }
+      document.body.removeChild(ta);
+    }
+  }
+  // per-block copy buttons
+  var blocks = document.querySelectorAll('[data-copy]');
+  for(var i=0;i<blocks.length;i++){
+    (function(btn){
+      btn.addEventListener('click', function(){ copyText(btn.getAttribute('data-copy'), btn); });
+    })(blocks[i]);
+  }
+  // add copy buttons to table command cells (first code only)
+  var cells = document.querySelectorAll('td.cmd');
+  for(var j=0;j<cells.length;j++){
+    (function(cell){
+      var code = cell.querySelector('code');
+      if(!code) return;
+      var btn = document.createElement('button');
+      btn.className = 'copy-btn'; btn.type='button'; btn.textContent='复制';
+      btn.setAttribute('aria-label','复制命令：' + code.textContent);
+      cell.appendChild(btn);
+      btn.addEventListener('click', function(){ copyText(code.textContent, btn); });
+    })(cells[j]);
+  }
+
+  // search filter
+  var input = document.getElementById('searchInput');
+  var box = document.getElementById('searchBox');
+  var clearBtn = document.getElementById('searchClear');
+  var noResult = document.getElementById('noResult');
+  var rows = document.querySelectorAll('table tbody tr');
+  var sections = document.querySelectorAll('[data-search-section]');
+  function applyFilter(){
+    var q = input.value.trim().toLowerCase();
+    box.classList.toggle('has-text', q.length>0);
+    if(!q){
+      for(var a=0;a<rows.length;a++) rows[a].classList.remove('hidden-row');
+      for(var b=0;b<sections.length;b++) sections[b].classList.remove('filtered-out');
+      noResult.classList.remove('show');
+      return;
+    }
+    var anyVisible = false;
+    for(var c=0;c<rows.length;c++){
+      var hit = rows[c].textContent.toLowerCase().indexOf(q) !== -1;
+      rows[c].classList.toggle('hidden-row', !hit);
+      if(hit) anyVisible = true;
+    }
+    // sections without tables: match on full text
+    for(var d=0;d<sections.length;d++){
+      var sec = sections[d];
+      var table = sec.querySelector('table');
+      var visible;
+      if(table){
+        visible = !!sec.querySelector('tbody tr:not(.hidden-row)');
+        // keep section if its non-table text matches too
+        if(!visible && sec.textContent.toLowerCase().indexOf(q) !== -1){ visible = true; }
+      } else {
+        visible = sec.textContent.toLowerCase().indexOf(q) !== -1;
+      }
+      sec.classList.toggle('filtered-out', !visible);
+      if(visible) anyVisible = true;
+    }
+    noResult.classList.toggle('show', !anyVisible);
+  }
+  input.addEventListener('input', applyFilter);
+  clearBtn.addEventListener('click', function(){ input.value=''; applyFilter(); input.focus(); });
+})();
+</script>
+</body>
+</html>
